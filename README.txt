@@ -11,11 +11,9 @@ Restrict user access to selected sites on open multisite networks.
 
 == Description ==
 
-This is the long description.  No limit, and you can use Markdown (as well as in the following sections).
+If you have a private network where all sites are open to anyone with an account, but still want the ability to invite someone from outside and limit their access to a single site, then Network Restricted Members is for you.
 
-If you have a private multisite network that is open to all of its users, but still want the ability to invite someone from outside and only let them see a specific site, then this plugin is for you.
-
-This plugin was developed for our internal [P2](http://p2theme.com) network, which is restricted to company employees. However, we still wanted to be able to bring external collaborators or clients over without giving them access to everything on the network.
+This plugin was developed for our private [P2](http://p2theme.com) network, which is open to all company employees. However, we still wanted to be able to bring contractors and clients over without giving them access to everything on the network.
 
 = Usage =
 
@@ -35,7 +33,7 @@ If you wish to lift the restrictions on a user, repeat the steps above but _unch
 Network Restricted Members works best when combined with a network privacy plugin, such as one of the following:
 
 * [More Privacy Options](https://wordpress.org/plugins/more-privacy-options/) by David Sader
-* [Network Privacy](http://wpmututorials.com/plugins/network-privacy/) by Ron Rennick
+* [Network Privacy](https://wordpress.org/plugins/network-privacy/) by Ron Rennick
 
 == Installation ==
 
