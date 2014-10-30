@@ -23,7 +23,7 @@ Network Restricted Members provides a user setting that allows multisite network
 
 1. As a super admin, navigate to the Users dashboard
 1. Click 'Edit' on the user you wish to restrict
-1. Check the option
+1. Check the option 'Restrict User Access'
 1. Save your changes
 
 From this point on, administrators will need to add this user to their sites before he or she is able to see them.
