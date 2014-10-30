@@ -48,18 +48,22 @@ Network Restricted Members works best when combined with a network privacy plugi
 
 1. Navigate to the 'Add New' in the plugins dashboard
 2. Navigate to the 'Upload' area
-3. Select `wp-cas-server.zip` from your computer
+3. Select `network-restricted-members.zip` from your computer
 4. Click 'Install Now'
 5. Activate the plugin in the Plugin dashboard
 
 = Using FTP =
 
-1. Download `wp-cas-server.zip`
-2. Extract the `wp-cas-server` directory to your computer
-3. Upload the `wp-cas-server` directory to the `/wp-content/plugins/` directory
+1. Download `network-restricted-members.zip`
+2. Extract the `network-restricted-members` directory to your computer
+3. Upload the `network-restricted-members` directory to the `/wp-content/plugins/` directory
 4. Activate the plugin in the Plugin dashboard
 
 == Changelog ==
+
+= 0.2 =
+* Only network (super) administrators can set this option.
+* Hide access restriction setting for network administrators.
 
 = 0.1 =
 * Initial release.

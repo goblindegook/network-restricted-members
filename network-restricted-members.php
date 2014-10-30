@@ -42,8 +42,13 @@ class Network_Restricted_Members {
 	 */
 	public function user_profile( $user ) {
 
-		// If user cannot edit other users, bail:
-		if ( ! current_user_can( 'edit_users' ) ) {
+		// If user is not a network admin, bail:
+		if ( ! is_super_admin() ) {
+			return;
+		}
+
+		// If user being edited is a network admin, bail:
+		if ( is_super_admin( $user->ID ) ) {
 			return;
 		}
 
@@ -77,8 +82,8 @@ class Network_Restricted_Members {
 	 */
 	public function user_profile_update( $user_id ) {
 
-		// If user cannot edit other users, bail:
-		if ( ! current_user_can( 'edit_users' ) ) {
+		// If user is not a network admin, bail:
+		if ( ! is_super_admin() ) {
 			return;
 		}
 
