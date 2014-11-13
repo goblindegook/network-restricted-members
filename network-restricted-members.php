@@ -44,7 +44,7 @@ class Network_Restricted_Members {
 		/**
 		 * User creation hooks
 		 */
-		add_action( 'user_register', array( $this, 'user_register' ), 1 );
+		add_action( 'user_register', array( $this, 'new_user' ), 1 );
 
 		/**
 		 * User profile hooks
@@ -123,11 +123,11 @@ class Network_Restricted_Members {
 	}
 
 	/**
-	 * Set the restriction flag on new user creation or registration.
+	 * Set the restriction flag on user creation or registration.
 	 *
 	 * @param integer $user_id ID for the newly created user.
 	 */
-	public function user_register( $user_id ) {
+	public function new_user( $user_id ) {
 		$new_users = get_site_option( static::OPTION_NEW_USERS );
 
 		if ( $new_users !== static::OPTION_NEW_USERS_RESTRICT ) {
