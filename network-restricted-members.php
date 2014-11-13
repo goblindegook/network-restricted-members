@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Network Restricted Members
-Version:     0.1
+Version:     0.3
 Description: Restrict user access to selected sites on open multisite networks.
 Author:      Luís Rodrigues
 Author URI:  http://log.pt/
@@ -16,14 +16,47 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 class Network_Restricted_Members {
 
 	/**
+	 * Option for whether to restrict newly created users.
+	 *
+	 * @var string
+	 */
+	const OPTION_NEW_USERS = 'network_restricted_members_new_users';
+
+	/**
+	 * Option to restrict new users.
+	 *
+	 * @var string
+	 */
+	const OPTION_NEW_USERS_RESTRICT = 'restrict';
+
+	/**
 	 * Initialize plugin and add action and filter hooks.
 	 */
 	function __construct() {
 		add_action( 'init', array( $this, 'load_textdomain' ) );
+
+		/**
+		 * Network setting hooks
+		 */
+		add_action( 'wpmu_options', array( $this, 'options' ), 0 );
+		add_action( 'update_wpmu_options', array( $this, 'options_update' ), 0 );
+
+		/**
+		 * User creation hooks
+		 */
+		add_action( 'user_register', array( $this, 'user_register' ), 1 );
+
+		/**
+		 * User profile hooks
+		 */
 		add_action( 'show_user_profile', array( $this, 'user_profile' ) );
 		add_action( 'edit_user_profile', array( $this, 'user_profile' ) );
 		add_action( 'personal_options_update', array( $this, 'user_profile_update' ) );
 		add_action( 'edit_user_profile_update', array( $this, 'user_profile_update' ) );
+
+		/**
+		 * Authentication checks
+		 */
 		add_action( 'template_redirect', array( $this, 'authenticate' ), 0 );
 		add_action( 'bp_screens', array( $this, 'authenticate' ), 5 );
 	}
@@ -33,6 +66,75 @@ class Network_Restricted_Members {
 	 */
 	public function load_textdomain() {
 		load_plugin_textdomain( 'network-restricted-members', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	}
+
+	/**
+	 * Display network option to force new users to be restricted by default.
+	 *
+	 * @return [type] [description]
+	 */
+	public function options() {
+
+		// If user is not a network admin, bail:
+		if ( ! is_super_admin() ) {
+			return;
+		}
+
+		?>
+			<h3><?php _e( 'Network Member Restrictions', 'network-restricted-members' ); ?></h3>
+			<table class="form-table">
+			<tr id="<?php echo static::OPTION_NEW_USERS ?>">
+				<th scope="row"><?php
+					_e( 'Restrict new users', 'network-restricted-members' );
+				?></th>
+				<td>
+					<label>
+						<input type="checkbox"
+							id="<?php echo static::OPTION_NEW_USERS ?>"
+							name="<?php echo static::OPTION_NEW_USERS ?>"
+							value="<?php echo static::OPTION_NEW_USERS_RESTRICT ?>"
+							<?php checked( static::OPTION_NEW_USERS_RESTRICT, get_site_option( static::OPTION_NEW_USERS ) ) ?>
+						>
+						<?php _e( "New users will only be able to access sites they're invited to.", 'network-restricted-members' ); ?>
+					</label>
+				</td>
+			</tr>
+			</table>
+		<?php
+
+	}
+
+	/**
+	 * Save options.
+	 *
+	 * - `network_restricted_members_new_users`: Whether to restrict new users
+	 *   by default
+	 */
+	public function options_update() {
+		// If user is not a network admin, bail:
+		if ( ! is_super_admin() ) {
+			return;
+		}
+
+		$new_users = isset( $_POST[ static::OPTION_NEW_USERS ] )
+			? $_POST[ static::OPTION_NEW_USERS ] : '';
+
+		update_site_option( static::OPTION_NEW_USERS, $new_users );
+	}
+
+	/**
+	 * Set the restriction flag on new user creation or registration.
+	 *
+	 * @param integer $user_id ID for the newly created user.
+	 */
+	public function user_register( $user_id ) {
+		$new_users = get_site_option( static::OPTION_NEW_USERS );
+
+		if ( $new_users !== static::OPTION_NEW_USERS_RESTRICT ) {
+			return;
+		}
+
+		static::set_user_restricted( $user_id, true );
 	}
 
 	/**
@@ -56,18 +158,16 @@ class Network_Restricted_Members {
 		<table class="form-table">
 			<tbody>
 				<tr>
-					<th>
-						<label for="network_restricted"><?php
-							_e( 'Restrict User Access', 'network-restricted-members' );
-						?></label>
-					</th>
+					<th scope="row"><?php
+						_e( 'Restrict User Access', 'network-restricted-members' );
+					?></th>
 					<td>
-						<input type="checkbox" name="network_restricted" id="network_restricted" value="1"
-							<?php checked( 1, get_the_author_meta( 'network_restricted', $user->ID ) ); ?>>
+						<label>
+							<input type="checkbox" name="network_restricted" id="network_restricted" value="1"
+								<?php checked( 1, get_the_author_meta( 'network_restricted', $user->ID ) ) ?>>
 
-						<span class="description"><?php
-							_e( "If checked, the user will only be able to access sites they're a member of.", 'network-restricted-members' );
-							?></span>
+								<?php _e( "Restrict this user's access to sites they're a member of", 'network-restricted-members' ) ?>
+						</label>
 					</td>
 				</tr>
 			</tbody>
@@ -88,9 +188,9 @@ class Network_Restricted_Members {
 		}
 
 		$restricted = isset( $_POST['network_restricted'] )
-			? (int) $_POST['network_restricted'] : 0;
+			? (boolean) $_POST['network_restricted'] : false;
 
-		update_user_meta( $user_id, 'network_restricted', $restricted );
+		static::set_user_restricted( $user_id, $restricted );
 	}
 
 	/**
@@ -165,6 +265,16 @@ class Network_Restricted_Members {
 		$restricted = $user_id ? get_the_author_meta( 'network_restricted', $user_id ) : false;
 
 		return $user_id && ! empty( $restricted ) && $restricted == 1;
+	}
+
+	/**
+	 * Set user restriction status.
+	 *
+	 * @param integer $user_id  ID of the user to restrict.
+	 * @param boolean $restrict User is restricted (default is `true`).
+	 */
+	public static function set_user_restricted( $user_id, $restricted = true ) {
+		update_user_meta( $user_id, 'network_restricted', $restricted ? 1 : 0 );
 	}
 
 }

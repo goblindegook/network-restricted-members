@@ -61,6 +61,9 @@ Network Restricted Members works best when combined with a network privacy plugi
 
 == Changelog ==
 
+= 0.3 =
+* Network setting to restrict new users by default.
+
 = 0.2 =
 * Only network (super) administrators can set this option.
 * Hide access restriction setting for network administrators.
