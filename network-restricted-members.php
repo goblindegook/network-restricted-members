@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Network Restricted Members
-Version:     0.3
+Version:     0.3.1
 Description: Restrict user access to selected sites on open multisite networks.
 Author:      Luís Rodrigues
 Author URI:  http://log.pt/
@@ -14,6 +14,11 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Main class for the Network Restricted Members plugin.
  */
 class Network_Restricted_Members {
+
+	/**
+	 * Plugin name.
+	 */
+	const NAME = 'network-restricted-members';
 
 	/**
 	 * Option for whether to restrict newly created users.
@@ -32,8 +37,8 @@ class Network_Restricted_Members {
 	/**
 	 * Initialize plugin and add action and filter hooks.
 	 */
-	function __construct() {
-		add_action( 'init', array( $this, 'load_textdomain' ) );
+	public function start() {
+		load_plugin_textdomain( self::NAME, false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
 		/**
 		 * Network setting hooks
@@ -62,16 +67,7 @@ class Network_Restricted_Members {
 	}
 
 	/**
-	 * Prepare plugin for i18n.
-	 */
-	public function load_textdomain() {
-		load_plugin_textdomain( 'network-restricted-members', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-	}
-
-	/**
 	 * Display network option to force new users to be restricted by default.
-	 *
-	 * @return [type] [description]
 	 */
 	public function options() {
 
@@ -83,17 +79,17 @@ class Network_Restricted_Members {
 		?>
 			<h3><?php _e( 'Network Member Restrictions', 'network-restricted-members' ); ?></h3>
 			<table class="form-table">
-			<tr id="<?php echo static::OPTION_NEW_USERS ?>">
+			<tr id="<?php echo self::OPTION_NEW_USERS ?>">
 				<th scope="row"><?php
 					_e( 'Restrict new users', 'network-restricted-members' );
 				?></th>
 				<td>
 					<label>
 						<input type="checkbox"
-							id="<?php echo static::OPTION_NEW_USERS ?>"
-							name="<?php echo static::OPTION_NEW_USERS ?>"
-							value="<?php echo static::OPTION_NEW_USERS_RESTRICT ?>"
-							<?php checked( static::OPTION_NEW_USERS_RESTRICT, get_site_option( static::OPTION_NEW_USERS ) ) ?>
+							id="<?php echo self::OPTION_NEW_USERS ?>"
+							name="<?php echo self::OPTION_NEW_USERS ?>"
+							value="<?php echo self::OPTION_NEW_USERS_RESTRICT ?>"
+							<?php checked( self::OPTION_NEW_USERS_RESTRICT, get_site_option( self::OPTION_NEW_USERS ) ) ?>
 						>
 						<?php _e( "New users will only be able to access sites they're invited to.", 'network-restricted-members' ); ?>
 					</label>
@@ -116,10 +112,10 @@ class Network_Restricted_Members {
 			return;
 		}
 
-		$new_users = isset( $_POST[ static::OPTION_NEW_USERS ] )
-			? $_POST[ static::OPTION_NEW_USERS ] : '';
+		$new_users = isset( $_POST[ self::OPTION_NEW_USERS ] )
+			? $_POST[ self::OPTION_NEW_USERS ] : '';
 
-		update_site_option( static::OPTION_NEW_USERS, $new_users );
+		update_site_option( self::OPTION_NEW_USERS, $new_users );
 	}
 
 	/**
@@ -128,13 +124,13 @@ class Network_Restricted_Members {
 	 * @param integer $user_id ID for the newly created user.
 	 */
 	public function new_user( $user_id ) {
-		$new_users = get_site_option( static::OPTION_NEW_USERS );
+		$new_users = get_site_option( self::OPTION_NEW_USERS );
 
-		if ( $new_users !== static::OPTION_NEW_USERS_RESTRICT ) {
+		if ( $new_users !== self::OPTION_NEW_USERS_RESTRICT ) {
 			return;
 		}
 
-		static::set_user_restricted( $user_id, true );
+		self::set_user_restricted( $user_id, true );
 	}
 
 	/**
@@ -190,7 +186,7 @@ class Network_Restricted_Members {
 		$restricted = isset( $_POST['network_restricted'] )
 			? (boolean) $_POST['network_restricted'] : false;
 
-		static::set_user_restricted( $user_id, $restricted );
+		self::set_user_restricted( $user_id, $restricted );
 	}
 
 	/**
@@ -203,7 +199,7 @@ class Network_Restricted_Members {
 		}
 
 		if ( is_user_logged_in() && ! is_network_admin() ) {
-			if ( static::is_user_restricted() && ! is_user_member_of_blog() ) {
+			if ( self::is_user_restricted() && ! is_user_member_of_blog() ) {
 				$this->access_denied();
 			}
 		}
@@ -279,8 +275,13 @@ class Network_Restricted_Members {
 
 }
 
-add_action( 'plugins_loaded', function () {
-	if ( is_multisite() ) {
-		new Network_Restricted_Members();
+function network_restricted_members_loaded() {
+	if ( ! is_multisite() ) {
+		return;
 	}
-} );
+
+	$plugin = new Network_Restricted_Members();
+	$plugin->start();
+}
+
+add_action( 'plugins_loaded', 'network_restricted_members_loaded' );

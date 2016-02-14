@@ -61,6 +61,9 @@ Network Restricted Members works best when combined with a network privacy plugi
 
 == Changelog ==
 
+= 0.3.1 =
+* Improved compatibility with PHP 5.2.
+
 = 0.3 =
 * Network setting to restrict new users by default.
 
